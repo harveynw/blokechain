@@ -1,6 +1,7 @@
 package data
 
 import (
+	"fmt"
 	"errors"
 	"bytes"
 	"math/big"
@@ -12,20 +13,9 @@ func fromPoint(p point) PublicKey {
 	return PublicKey{p: p}
 }
 
+// HashEncode generates unique hash of public key
 func (pk PublicKey) HashEncode() []byte {
-	var prefix []byte
-
-	// Only need sign of y
-	remainder := new(big.Int).Mod(&pk.p.y, big.NewInt(2))
-	if remainder.Cmp(big.NewInt(0)) == 0 {
-		prefix = []byte("\x02")
-	} else {
-		prefix = []byte("\x03")
-	}
-
-	pkb := append(prefix, pk.p.x.Bytes()...)
-
-	return DoubleHash(pkb, true)
+	return DoubleHash(pk.EncodeCompressed(), true)
 }
 
 // DoubleHash hashes twice using SHA-256
@@ -66,6 +56,20 @@ func (pk PublicKey) Encode() []byte {
 	return encoded
 }
 
+// EncodeCompressed gives x and sign of y for a public key
+func (pk PublicKey) EncodeCompressed() []byte {
+	var prefix []byte
+	// Only need sign of y
+	remainder := new(big.Int).Mod(&pk.p.y, big.NewInt(2))
+	if remainder.Cmp(big.NewInt(0)) == 0 {
+		prefix = []byte{0x02}
+	} else {
+		prefix = []byte{0x03}
+	}
+
+	return append(prefix, pk.p.x.Bytes()...)
+}
+
 // DecodePublicKey returns public key object from uncompressed format
 func DecodePublicKey(b []byte) (PublicKey, error) {
 	if len(b) != 1 + 32 + 32 || b[0] != 0x04 {
@@ -74,6 +78,31 @@ func DecodePublicKey(b []byte) (PublicKey, error) {
 
 	x := new(big.Int).SetBytes(b[1:33])
 	y := new(big.Int).SetBytes(b[33:65])
+
+	point := point{curve: &secp256k1, x: *x, y: *y}
+	return PublicKey{p: point}, nil
+}
+
+// DecodePublicKeyCompressed returns public key object from the compressed format
+func DecodePublicKeyCompressed(b []byte) (PublicKey, error) {
+	if len(b) != 1 + 32 {
+		return *new(PublicKey) , errors.New("Invalid format")
+	}
+	prefix := b[0]
+
+	x := new(big.Int)
+	var y *big.Int
+	x.SetBytes(b[1:33])
+
+	if prefix == 0x02 {
+		// Even
+		y, _ = YfromX(x)
+	} else if prefix == 0x03 {
+		// Odd
+		_, y = YfromX(x)
+	} else {
+		return *new(PublicKey) , errors.New("Invalid format (sign)")
+	}
 
 	point := point{curve: &secp256k1, x: *x, y: *y}
 	return PublicKey{p: point}, nil
@@ -93,6 +122,7 @@ func (sig Signature) Encode() []byte {
 
 // DecodeSignature recovers Signature from DER encoding
 func DecodeSignature(b []byte) (Signature, error) {
+	// SIGHASH_SINGLE only
 	if b[0] != 0x30 {
 		return *new(Signature) , errors.New("Invalid format")
 	}
@@ -182,13 +212,18 @@ func DecodeInt(b []byte) int {
 func DecodeNextVarInt(b []byte) (int, []byte) {
 	enc := b[0]
 	if enc < 0xfd {
+		fmt.Println("Var int", b[0])
 		return int(enc), b[1:]
 	} else if enc == 0xfd {
+		fmt.Println("Var int", b[0:3])
 		return DecodeInt(b[1:3]), b[3:]
 	} else if enc == 0xfe {
+		fmt.Println("Var int", b[0:5])
 		return DecodeInt(b[1:5]), b[5:]
 	} else if enc == 0xff {
+		fmt.Println("Var int", 0)
 		return 0, b[1:]
 	}
+	fmt.Println("Var int", -1)
 	return -1, b
 }

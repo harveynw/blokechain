@@ -148,6 +148,27 @@ func (p point) isOnCurve() bool {
 	return result.Cmp(big.NewInt(0)) == 0
 }
 
+// YfromX recovers the two possible values of the y-coord on secp256k1 from x
+func YfromX(x *big.Int) (even, odd *big.Int) {
+	ySq := new(big.Int)
+	ySq.Exp(x, big.NewInt(3), &secp256k1.p).Add(ySq, big.NewInt(7)).Mod(ySq, &secp256k1.p)
+
+	// Works for secp256k1 in particular
+	// (https://bitcoin.stackexchange.com/questions/86234/how-to-uncompress-a-public-key)
+	exp := new(big.Int)
+	exp.Add(&secp256k1.p, big.NewInt(1)).Div(exp, big.NewInt(4))
+
+	y1, y2 := new(big.Int), new(big.Int)
+	y1.Exp(ySq, exp, &secp256k1.p)
+	y2.Sub(&secp256k1.p, y1)
+
+	remainder := new(big.Int).Mod(y1, big.NewInt(2))
+	if remainder.Cmp(big.NewInt(0)) == 0 {
+		return y1, y2
+	}
+	return y2, y1
+}
+
 func (p point) isZero() bool {
 	zero := big.NewInt(0)
 	return p.x.Cmp(zero) == 0 && p.y.Cmp(zero) == 0

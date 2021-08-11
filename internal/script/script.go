@@ -81,8 +81,6 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 		} else {
 			stack.Push(selected)
 		}
-
-		fmt.Println("STACK:", stack.stack)
 	}
 
 	err, top := stack.Pop()
@@ -188,7 +186,7 @@ var ops = map[byte]func(*ExecutionStack)bool {
 		if err3 != nil {
 			return false
 		}
-		pubKey, err4 := data.DecodePublicKey(pubKeyBytes)
+		pubKey, err4 := data.DecodePublicKeyCompressed(pubKeyBytes)
 		if err4 != nil {
 			return false
 		}

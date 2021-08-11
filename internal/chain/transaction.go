@@ -1,7 +1,6 @@
 package chain
 
 import (
-	"fmt"
 	"bytes"
 	"github.com/harveynw/blokechain/internal/data"
 )
@@ -69,7 +68,6 @@ func (ts Transaction) Encode(signingIndex int) []byte {
 
 // DecodeTransaction recovers Transaction according to the protocol
 func DecodeTransaction(b []byte) Transaction {
-	fmt.Println("BEGIN DECODE TX")
 	compatibleVersion := []byte{0x00, 0x00, 0x00, 0x01}
 	var version []byte
 	version, b = b[0:4], b[4:]
@@ -79,7 +77,6 @@ func DecodeTransaction(b []byte) Transaction {
 	}
 
 	inputCounter, b := data.DecodeNextVarInt(b)
-	fmt.Println("INPUT COUNTER IS ", inputCounter)
 	txIn := make([]TransactionInput, 0)
 	for i := 0; i < inputCounter; i++ {
 		var tx TransactionInput
@@ -88,7 +85,6 @@ func DecodeTransaction(b []byte) Transaction {
 	}
 
 	outputCounter, b := data.DecodeNextVarInt(b)
-	fmt.Println("OUTPUT COUNTER IS ", outputCounter)
 	txOut := make([]TransactionOutput, 0)
 	for i := 0; i < outputCounter; i++ {
 		var tx TransactionOutput
@@ -102,6 +98,10 @@ func DecodeTransaction(b []byte) Transaction {
 // Encode transaction input using protocol
 func (in TransactionInput) Encode() []byte {
 	enc := make([]byte, 0)
+
+	if len(in.prevTransaction) != 32 {
+		panic("Invalid previous transaction hash, must be 32 bytes")
+	}
 
 	// Previous transaction (32 bytes) + Output index (4 bytes)
 	enc = append(enc, in.prevTransaction...)
@@ -136,9 +136,7 @@ func DecodeNextTransactionInput(b []byte) (TransactionInput, []byte) {
 	prevTransaction := b[0:32]
 	prevIndex := data.DecodeInt(b[32:36])
 
-	fmt.Printf("scriptSigSizeData %x \n", b[36:])
 	scriptSigSize, b := data.DecodeNextVarInt(b[36:])
-	fmt.Println("INPUT scriptSig size is ", scriptSigSize)
 	scriptSig := b[0:scriptSigSize]
 
 	return TransactionInput{prevTransaction: prevTransaction, prevIndex: prevIndex, scriptSig: scriptSig}, b[scriptSigSize+4:]

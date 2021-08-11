@@ -8,16 +8,22 @@ import (
 
 // Test tests this package
 func Test() {
+	prevHash := data.DoubleHash([]byte("Test"), false)
+
 	// Sign transaction
-	secretKey, _ := data.RandomKeyPair()
+	secretKey, pubKey := data.RandomKeyPair()
+	// secretKey, pubKey := data.RandomKeyPair()
 
 	// Recipient
 	_, pk2 := data.RandomKeyPair()
 
+	// Adversary
+	// randomSecretKey, _ := data.RandomKeyPair()
+
 	txIn := TransactionInput{
-		prevTransaction: []byte("245e2d1f87415836cbb7b0bc84e40f4ca1d2a812be0eda381f02fb2224b4ad69"),
+		prevTransaction: prevHash,
 		prevIndex: 0,
-		prevTransactionPubKey: []byte{0x01}, // FAKE LOCKING SCRIPT
+		prevTransactionPubKey: script.P2PKH(pubKey.HashEncode()).Encode(), // LOCKING SCRIPT
 		scriptSig: []byte{},
 	}
 
@@ -26,8 +32,8 @@ func Test() {
 		scriptPubKey: script.P2PKH(pk2.HashEncode()).Encode(),
 	}
 
-	fmt.Printf("TX-IN %x \n", txIn.Encode())
-	fmt.Printf("TX-OT %x \n", txOut.Encode())
+	// fmt.Printf("TX-IN %x \n", txIn.Encode())
+	// fmt.Printf("TX-OT %x \n", txOut.Encode())
 
 	tx := Transaction{
 		version: 1,
@@ -36,16 +42,30 @@ func Test() {
 	}
 
 	txEncoded := tx.Encode(0)
-	scriptSigComputed := data.SignMessage(secretKey, txEncoded)
 
 	// Now we fill in scriptSig
-	tx.txIn[0].scriptSig = scriptSigComputed.Encode()
-	fmt.Println("Size of script sig", len(tx.txIn[0].scriptSig))
+	newScriptSig := script.NewScript()
+	// newScriptSig.AppendData(data.SignMessage(randomSecretKey, txEncoded).Encode())
+	newScriptSig.AppendData(data.SignMessage(secretKey, txEncoded).Encode())
+	newScriptSig.AppendData(pubKey.EncodeCompressed())
+	tx.txIn[0].scriptSig = newScriptSig.Encode()
 
-	txFullEncoded := tx.Encode(-1)
-	fmt.Printf("TX: %x \n", txFullEncoded)
+	// fmt.Println("Size of script sig", len(newScriptSig.Encode()))
 
-	txRecovered := DecodeTransaction(txFullEncoded)
-	fmt.Println("TX recovered")
-	fmt.Println(txRecovered)
+	// txFullEncoded := tx.Encode(-1)
+	// fmt.Printf("TX: %x \n", txFullEncoded)
+
+	// txRecovered := DecodeTransaction(txFullEncoded)
+	// fmt.Println("TX recovered")
+	// fmt.Println("Amount", txRecovered.txOut[0].amount)
+	// fmt.Printf("Pubkey %x \n", txRecovered.txOut[0].scriptPubKey)
+	// fmt.Printf("Before %x \n", script.P2PKH(pk2.HashEncode()).Encode())
+
+	// fmt.Printf("Sig %x \n", txRecovered.txIn[0].scriptSig)
+	// fmt.Printf("Sig before %x \n", newScriptSig.Encode())
+
+	// fmt.Println("***NEW***")
+
+	valid, err := tx.Verify()
+	fmt.Println(valid, err)
 }
