@@ -3,7 +3,6 @@ package script
 import (
 	"fmt"
 	"bytes"
-	"encoding/hex"
 	"github.com/harveynw/blokechain/internal/data"
 )
 
@@ -215,25 +214,4 @@ func P2PKH(address []byte) *Script {
 	script.AppendOpCode(0x88)
 	script.AppendOpCode(0xac)
 	return script
-}
-
-// Test is a utility function for testing this package
-func Test() {
-	script := NewScript()
-
-	sig := []byte("signaturederp")
-	script.AppendData(sig)
-	pubkey, _ := hex.DecodeString("932903290494348")
-	script.AppendData(pubkey)
-
-	script.AppendOpCode(0x76)
-	script.AppendOpCode(0xa9)
-	addr, _ := hex.DecodeString("1e5518889b0d3554fe7cd3378ade632aff3069d8")
-	script.AppendData(addr)
-	script.AppendOpCode(0x88)
-	script.AppendOpCode(0xac)
-
-	script.Print()
-
-	fmt.Println(script.Execute([]byte("encoded transaction")))
 }

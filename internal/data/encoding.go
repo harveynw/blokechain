@@ -1,7 +1,6 @@
 package data
 
 import (
-	"fmt"
 	"errors"
 	"bytes"
 	"math/big"
@@ -212,18 +211,13 @@ func DecodeInt(b []byte) int {
 func DecodeNextVarInt(b []byte) (int, []byte) {
 	enc := b[0]
 	if enc < 0xfd {
-		fmt.Println("Var int", b[0])
 		return int(enc), b[1:]
 	} else if enc == 0xfd {
-		fmt.Println("Var int", b[0:3])
 		return DecodeInt(b[1:3]), b[3:]
 	} else if enc == 0xfe {
-		fmt.Println("Var int", b[0:5])
 		return DecodeInt(b[1:5]), b[5:]
 	} else if enc == 0xff {
-		fmt.Println("Var int", 0)
 		return 0, b[1:]
 	}
-	fmt.Println("Var int", -1)
 	return -1, b
 }
