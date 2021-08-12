@@ -5,4 +5,8 @@ A ground up implementation of Bitcoin in Go, using the original whitepaper and s
 Transactions on blokechain would be valid on the Bitcoin network, apart from some subtleties in integer encoding, SIGHASH and the use of SHA-256 in place of RIPEMD-160.
 
 # TODO
-crypto.go YFromX can simply be refactored to PublicKeys from X or similar, as that is the end goal
+- Wallet command line access
+- Node server logic
+- Miner logic
+- Implementing all of bitcoin script
+- OP_DAVE
