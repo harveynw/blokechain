@@ -62,9 +62,10 @@ func (wallet *Wallet) Add(pubKey data.PublicKey, secretKey *big.Int) {
 }
 
 // GenerateNew creates a new keypair and saves it
-func (wallet *Wallet) GenerateNew() {
+func (wallet *Wallet) GenerateNew() string {
 	secretKey, pubKey := data.RandomKeyPair()
 	wallet.Add(pubKey, secretKey)
+	return pubKey.ToAddress()
 }
 
 // ListAddresses returns a slice of the addresses in the wallet

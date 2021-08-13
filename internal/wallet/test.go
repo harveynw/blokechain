@@ -6,8 +6,8 @@ import (
 
 func Test() {
 	wallet := Load()
-	wallet.GenerateNew()
-	wallet.GenerateNew()
-
+	for i := 0; i < 5; i++ {
+		wallet.GenerateNew()
+	}
 	fmt.Println(wallet.ListAddresses())
 }
