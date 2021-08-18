@@ -2,14 +2,15 @@ package script
 
 import (
 	"fmt"
-	"bytes"
+	"reflect"
+    "runtime"
 	"github.com/harveynw/blokechain/internal/data"
 )
 
 // ExecutionStack implements simple stack object
 type ExecutionStack struct {
-	stack [][]byte
-	transactionEncoded []byte // Required to verify signature in OP_CHECKSIG
+	Stack [][]byte
+	TransactionEncoded []byte // Required to verify signature in OP_CHECKSIG
 }
 
 // Script for containing and encoding a script
@@ -17,21 +18,28 @@ type Script struct {
 	script []byte
 }
 
+var operations = map[byte]func(*ExecutionStack)bool {
+	0x76 : OP_DUP,
+	0xa9 : OP_HASH160,
+	0x88 : OP_EQUALVERIFY,
+	0xac : OP_CHECKSIG,
+}
+
 // Push value on top of stack
 func (s *ExecutionStack) Push(value []byte) {
-	s.stack = append(s.stack, value)
+	s.Stack = append(s.Stack, value)
 }
 
 // Pop value off top of stack
 func (s *ExecutionStack) Pop() (bool, []byte) {
-	size := len(s.stack)
+	size := len(s.Stack)
 
 	if size == 0 {
 		return true, nil
 	}
 
-	value := (s.stack)[size-1]
-	s.stack = (s.stack)[:size-1]
+	value := (s.Stack)[size-1]
+	s.Stack = (s.Stack)[:size-1]
 	return false, value
 }
 
@@ -44,7 +52,7 @@ func NewScript() *Script {
 // NewExecutionStack creates an empty stack
 func NewExecutionStack(transactionEncoded []byte) *ExecutionStack {
 	stack := make([][]byte, 0)
-	return &ExecutionStack{stack: stack, transactionEncoded: transactionEncoded}
+	return &ExecutionStack{Stack: stack, TransactionEncoded: transactionEncoded}
 }
 
 // AppendOpCode for an opcode
@@ -72,9 +80,9 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 		isOp, selected, scriptBytes = scanNext(scriptBytes)
 
 		if isOp {
-			success := ops[selected[0]](stack)
+			success := operations[selected[0]](stack)
 			if !success {
-				fmt.Println("Failed on", opCodeNames[selected[0]])
+				fmt.Println("Failed on", retrieveOpName(selected[0]))
 				return false
 			}
 		} else {
@@ -114,12 +122,24 @@ func (src *Script) Print() {
 		isOp, selected, scriptBytes = scanNext(scriptBytes)
 
 		if isOp {
-			fmt.Println(line, opCodeNames[selected[0]])
+			fmt.Println(line, retrieveOpName(selected[0]))
 		} else {
 			fmt.Printf("%v %x \n", line, selected)
 		}
 		line++
 	}
+}
+
+func retrieveOpName(op byte) string {
+	opFunc := operations[op]
+	fullName := runtime.FuncForPC(reflect.ValueOf(opFunc).Pointer()).Name()
+
+	for i := 0; i < len(fullName) - 2; i++ {
+		if fullName[i:i+3] == "OP_" {
+			return fullName[i:]
+		}
+	}
+	return ""
 }
 
 // Find and returns next opcode or data as well as the rest of scriptBytes
@@ -137,81 +157,7 @@ func scanNext(scriptBytes []byte) (isOp bool, selected []byte, remainingBytes []
 	return true, []byte{first}, scriptBytes[1:]
 }
 
-var opCodeNames = map[byte]string {
-	0x76 : "OP_DUP",
-	0xa9 : "OP_HASH160",
-	0x88 : "OP_EQUALVERIFY",
-	0xac : "OP_CHECKSIG",
-}
-
-var ops = map[byte]func(*ExecutionStack)bool {
-	0x76 : func(s *ExecutionStack) bool {
-		// OP_DUP
-		err, value := s.Pop()
-		if err {
-			return false
-		}
-		s.Push(value)
-		s.Push(value)
-		return true
-	},
-	0xa9 : func(s *ExecutionStack) bool {
-		// OP_HASH160
-		err, value := s.Pop()
-		if err {
-			return false
-		}
-		s.Push(data.DoubleHash(value, true))
-		return true
-	},
-	0x88 : func(s *ExecutionStack) bool {
-		// OP_EQUALVERIFY
-		err1, val1 := s.Pop()
-		err2, val2 := s.Pop()
-		if err1 || err2 {
-			return false
-		}
-		return bytes.Compare(val1, val2) == 0
-	},
-	0xac : func(s *ExecutionStack) bool {
-		// OP_CHECKSIG
-		err1, pubKeyBytes := s.Pop()
-		err2, sigBytes := s.Pop()
-		if err1 || err2 {
-			return false
-		}
-
-		sig, err3 := data.DecodeSignature(sigBytes)
-		if err3 != nil {
-			return false
-		}
-		pubKey, err4 := data.DecodePublicKeyCompressed(pubKeyBytes)
-		if err4 != nil {
-			return false
-		}
-
-		if sig.VerifySignature(pubKey, s.transactionEncoded) {
-			s.Push([]byte{0x01}) // Truthy
-		} else {
-			s.Push([]byte{}) // False
-		}
-
-		return true
-	},
-}
-
 // Concat appends one script on to the end of another
 func (src *Script) Concat(a *Script) {
 	src.script = append(src.script, a.script...)
-}
-
-// P2PKH (Pay to Public Key Hash) generates the boilerplate fund locking script
-func P2PKH(address []byte) *Script {
-	script := NewScript()
-	script.AppendOpCode(0x76)
-	script.AppendOpCode(0xa9)
-	script.AppendData(address)
-	script.AppendOpCode(0x88)
-	script.AppendOpCode(0xac)
-	return script
 }

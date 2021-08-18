@@ -10,9 +10,11 @@ func (pk *PublicKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		X big.Int `json:"x"`
 		Y big.Int `json:"y"`
+		Address string `json:"address"`
 	}{
 		X: pk.p.x,
 		Y: pk.p.y,
+		Address: pk.ToAddress(),
 	})
 }
 
@@ -21,6 +23,7 @@ func (pk *PublicKey) UnmarshalJSON(data []byte) error {
 	recovered := &struct{
 		X big.Int `json:"x"`
 		Y big.Int `json:"y"`
+		Address string `json:"address"`
 	}{}
 
 	if err := json.Unmarshal(data, &recovered); err != nil {
