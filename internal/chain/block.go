@@ -1,23 +1,25 @@
 package chain
 
 import (
-	"fmt"
 	"github.com/harveynw/blokechain/internal/data"
 )
 
+// Block data structure for forming blockchain
 type Block struct {
-	header BlockHeader
+	header *BlockHeader
 	txs []Transaction
 }
 
+// BlockHeader data structure for summarising contents of a block
 type BlockHeader struct {
 	prevBlockHash []byte
 	merkleRoot []byte
 	timestamp uint32
-	difficultyTarget []byte
-	nonce []byte
+	difficultyTarget Difficulty
+	nonce uint32
 }
 
+// Encode serializes the block header, used for mining
 func (bh BlockHeader) Encode() []byte {
 	enc := make([]byte, 0)
 
@@ -31,9 +33,14 @@ func (bh BlockHeader) Encode() []byte {
 	enc = append(enc, bh.merkleRoot[0:32]...)
 
 	// Timestamp (seconds from Unix Epoch, 4 Bytes)
-	enc = append(enc, data.EncodeInt(bh.timestamp, 4)...)
+	enc = append(enc, data.EncodeInt(int(bh.timestamp), 4)...)
 
 	// Difficulty Target
-	enc = append(enc, data.EncodeInt(int(bh.difficultyTarget), 4)...)
+	enc = append(enc, bh.difficultyTarget.Encode()...)
 
+	// Nonce
+	enc = append(enc, data.EncodeInt(int(bh.nonce), 4)...)
+
+	return enc
 }
+

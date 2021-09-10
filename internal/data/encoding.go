@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 )
 
-
 func fromPoint(p point) PublicKey {
 	return PublicKey{p: p}
 }
@@ -178,10 +177,7 @@ func EncodeInt(i int, nbytes int) []byte {
 	buf = big.NewInt(int64(i)).FillBytes(buf)
 
 	// if littleEndian {
-	// 	// Convert from big-endian
-	// 	for i, j := 0, len(buf)-1; i < j; i, j = i+1, j-1 {
-	// 		buf[i], buf[j] = buf[j], buf[i]
-	// 	}
+	// 	buf = reverseBytes(buf)
 	// }
 
 	return buf

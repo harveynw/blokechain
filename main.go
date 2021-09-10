@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/harveynw/blokechain/internal/wallet"
+	"github.com/harveynw/blokechain/internal/chain"
 )
 
 func main() {
 	//data.TestEncoding()
-	wallet.Test()
+	//wallet.Test()
+	chain.TestDifficulty()
 }
 
