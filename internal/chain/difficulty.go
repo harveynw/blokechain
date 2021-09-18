@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"math/big"
-	//"github.com/harveynw/blokechain/internal/params"
 )
 
 // Difficulty houses logic for computing, encoding and testing difficulty
 type Difficulty struct {
 	target *big.Int
+	targetBytes []byte
 }
 
 func min(a, b int) int {
@@ -28,6 +28,22 @@ func leftPad(b []byte, l int) ([]byte, int) {
 	return append(make([]byte, diff), b...), diff
 }
 
+func Compare(a, b []byte) int {
+	if len(a) != len(b) {
+		return -2
+	}
+
+	for i, val := range a {
+		if val < b[i] {
+			return -1
+		}
+		if val > b[i] {
+			return +1
+		}
+	}
+	return 0
+}
+
 // DecodeDifficulty recovers from mantissa-exponent format
 func DecodeDifficulty(b []byte) (Difficulty, error) {
 	if len(b) != 4 {
@@ -39,7 +55,9 @@ func DecodeDifficulty(b []byte) (Difficulty, error) {
 	target := new(big.Int)
 	target.Lsh(coefficient, exponent)
 
-	return Difficulty{target: target}, nil
+	targetBytes := target.FillBytes(make([]byte, 32))
+
+	return Difficulty{target: target, targetBytes: targetBytes}, nil
 }
 
 // Encode returns a 4 byte mantissa-exponent encoding of the difficulty
@@ -58,4 +76,31 @@ func (diff Difficulty) Encode() []byte {
 	mantissa += amountPadded
 
 	return append([]byte{byte(mantissa)}, b...)
+}
+
+// IsSolution tests whether a block hash is below the difficulty target
+func (diff Difficulty) IsSolution(hash []byte) bool {
+	if Compare(hash, diff.targetBytes) == -1 {
+		//fmt.Println("FOUND!")
+		//fmt.Printf("%X < %X \n", hash, diff.targetBytes)
+		return true
+	}
+	return false
+	//return compare(hash, diff.targetBytes) == -1
+}
+
+// Mul multiples the difficulty by constant
+func (diff Difficulty) Mul(c *big.Int) Difficulty {
+	diff.target.Mul(diff.target, c)
+	diff.target.FillBytes(diff.targetBytes)
+	return diff
+}
+
+// Div divides the difficulty by constant
+func (diff Difficulty) Div(c *big.Int) Difficulty {
+	// fmt.Println("Diff-b", diff.target)
+	diff.target.Div(diff.target, c)
+	diff.target.FillBytes(diff.targetBytes)
+	// fmt.Println("Diff-a", diff.target)
+	return diff
 }

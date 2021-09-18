@@ -94,5 +94,6 @@ func getWalletFolder() string {
 }
 
 func getWalletFile() string {
-	return getWalletFolder() + "/wallet.json"
+	// return getWalletFolder() + "/wallet.json"
+	return getWalletFolder() + "/genesis_coinbase_wallet.json"
 }

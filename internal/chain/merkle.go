@@ -5,9 +5,9 @@ import (
 )
 
 // MerkleRoot returns root of merkle tree, duplicating last tx if odd number
-func (b *Block) MerkleRoot() []byte {
-	hashes := make([][]byte, 0, len(b.txs))
-	for i, tx := range b.txs {
+func MerkleRoot(txs []Transaction) []byte {
+	hashes := make([][]byte, len(txs), len(txs))
+	for i, tx := range txs {
 		hashes[i] = data.DoubleHash(tx.Encode(-1), false)
 	}
 
@@ -15,18 +15,16 @@ func (b *Block) MerkleRoot() []byte {
 }
 
 func computeMerkleRoot(hashes [][]byte) []byte {
-	nodes := len(hashes)
-
 	// Duplicate lonely hash
-	if nodes == 1 {
+	if len(hashes) == 1 {
 		hashes = append(hashes, hashes[0])
 	}
 
-	if nodes == 2 {
+	if len(hashes) == 2 {
 		// Leaf nodes
 		return data.DoubleHash(append(hashes[0], hashes[1]...), false)
 	}
 	// Node
-	left, right := computeMerkleRoot(hashes[0:nodes/2]), computeMerkleRoot(hashes[nodes/2:nodes])
+	left, right := computeMerkleRoot(hashes[0:len(hashes)/2]), computeMerkleRoot(hashes[len(hashes)/2:])
 	return data.DoubleHash(append(left, right...), false)
 }
