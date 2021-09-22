@@ -15,7 +15,7 @@ type Block struct {
 
 // BlockHeader data structure for summarising contents of a block
 type BlockHeader struct {
-	prevBlockHash []byte
+	PrevBlockHash []byte
 	merkleRoot []byte
 	timestamp uint32
 	DifficultyTarget Difficulty
@@ -30,7 +30,7 @@ func (bh BlockHeader) Encode() []byte {
 	enc = append(enc, 0x02, 0x00, 0x00, 0x01)
 	
 	// Previous Block Hash (32 Bytes)
-	enc = append(enc, bh.prevBlockHash[0:32]...)
+	enc = append(enc, bh.PrevBlockHash[0:32]...)
 
 	// Merkle Root (32 Bytes)
 	enc = append(enc, bh.merkleRoot[0:32]...)
@@ -45,6 +45,12 @@ func (bh BlockHeader) Encode() []byte {
 	enc = append(enc, data.EncodeInt(int(bh.Nonce), 4)...)
 
 	return enc
+}
+
+// BlockHash hashes the block header
+func (bh BlockHeader) BlockHash() []byte {
+	enc := bh.Encode()
+	return data.DoubleHash(enc, false)
 }
 
 // IncrementNonce increases the nonce field of the block to ensure it's hash changes
@@ -93,7 +99,7 @@ func Genesis(diff int64) Block {
 	// fmt.Printf("%X \n", genesisDifficulty.targetBytes)
 	merkleRoot := MerkleRoot([]Transaction{coinbaseTx})
 	bh := BlockHeader{
-		prevBlockHash: make([]byte, 32),
+		PrevBlockHash: make([]byte, 32),
 		merkleRoot: merkleRoot,
 		timestamp: 1631303394,
 		DifficultyTarget: genesisDifficulty,

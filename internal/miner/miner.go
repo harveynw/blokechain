@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 	"github.com/harveynw/blokechain/internal/chain"
-	"github.com/harveynw/blokechain/internal/data"
 	"github.com/harveynw/blokechain/internal/params"
 )
 
@@ -20,7 +19,7 @@ func Mine(bh chain.BlockHeader) (success bool, bhSolved chain.BlockHeader) {
 
 
 	for i := 0; i < params.MiningIterationsPerCall; i++ {
-		work := data.DoubleHash(bh.Encode(), false)
+		work := bh.BlockHash()
 
 		// if chain.Compare(work, lowest) == -1 {
 		// 	lowest = work
