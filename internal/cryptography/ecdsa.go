@@ -1,4 +1,4 @@
-package data
+package cryptography
 
 import (
 	"fmt"
@@ -53,7 +53,7 @@ var gen generator = generator{
 
 // SignMessage using ECDSA (non-deterministic!)
 func SignMessage(secretKey *big.Int, message []byte) Signature {
-	e := new(big.Int).SetBytes(DoubleHash(message, false))
+	e := new(big.Int).SetBytes(Hash256(message))
 	n := &gen.order
 
 	k := gen.randomSecretKey()
@@ -80,7 +80,7 @@ func (sig *Signature) VerifySignature(pk PublicKey, message []byte) bool {
 		return false
 	}
 
-	e := new(big.Int).SetBytes(DoubleHash(message, false))
+	e := new(big.Int).SetBytes(Hash256(message))
 
 	sInv := new(big.Int)
 	sInv.ModInverse(sig.s, n)
@@ -262,7 +262,7 @@ func hexToBigInt(hex string) big.Int {
 }
 
 // Test testfunc
-func Test() {
+func Test2() {
 	// fmt.Println(secp256k1)
 	// fmt.Println(G.isOnCurve())
 	// fmt.Println(&gen.order)

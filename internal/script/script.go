@@ -4,72 +4,122 @@ import (
 	"fmt"
 	"reflect"
     "runtime"
-	"github.com/harveynw/blokechain/internal/data"
+	"github.com/harveynw/blokechain/internal/script/ops"
 )
 
-// ExecutionStack implements simple stack object
-type ExecutionStack struct {
+// VM implements the bitcoin virtual machine
+type VM struct {
 	Stack [][]byte
-	TransactionEncoded []byte // Required to verify signature in OP_CHECKSIG
+	AltStack [][]byte
+	Transaction []byte // Required for operations dependent on the transaction
 }
 
 // Script for containing and encoding a script
 type Script struct {
-	script []byte
+	data []byte
 }
 
-var operations = map[byte]func(*ExecutionStack)bool {
-	0x76 : OP_DUP,
-	0xa9 : OP_HASH160,
-	0x88 : OP_EQUALVERIFY,
-	0xac : OP_CHECKSIG,
+var operations = map[byte]func(*VM)bool {
+	// FLOW CONTROL (Branching handled at execution)
+	0x61 : ops.OP_NOP,
+	0x69 : ops.OP_VERIFY,
+	0x6a : ops.OP_RETURN,
+
+	// STACK
+	0x6b : ops.OP_TOALTSTACK,
+	0x6c : ops.OP_FROMALTSTACK,
+	0x73 : ops.OP_IFDUP,
+	0x74 : ops.OP_DEPTH,
+	0x75 : ops.OP_DROP,
+	0x76 : ops.OP_DUP,
+	0x77 : ops.OP_NIP,
+	0x78 : ops.OP_OVER,
+	0x79 : ops.OP_PICK,
+	0x7a : ops.OP_ROLL,
+	0x7b : ops.OP_ROT,
+	0x7c : ops.OP_SWAP,
+	0x7d : ops.OP_TUCK,
+	0x6d : ops.OP_2DROP,
+	0x6e : ops.OP_2DUP,
+	0x6f : ops.OP_3DUP,
+	0x70 : ops.OP_2OVER,
+	0x71 : ops.OP_2ROT,
+	0x72 : ops.OP_2SWAP,
+
+	// CRYPTO
+	0xa6 : ops.OP_RIPEMD160,
+	0xa7 : ops.OP_SHA1,
+	0xa8 : ops.OP_SHA256,
+	0xa9 : ops.OP_HASH160,
+	0xaa : ops.OP_HASH256,
+	0xab : ops.OP_CODESEPERATOR,
+	0xac : ops.OP_CHECKSIG,
+	0xad : ops.OP_CHECKSIGVERIFY,
+	0xae : ops.OP_CHECKMULTISIG, // TODO Not implemented!
+	0xaf : ops.OP_CHECKMULTISIGVERIFY,
+
+
+	0x88 : ops.OP_EQUALVERIFY,
+
 }
 
 // Push value on top of stack
-func (s *ExecutionStack) Push(value []byte) {
-	s.Stack = append(s.Stack, value)
+func (vm *VM) Push(value []byte, alt bool) {
+	if alt {
+		vm.AltStack = append(vm.AltStack, value)
+	} else {
+		vm.Stack = append(vm.Stack, value)
+	}
 }
 
 // Pop value off top of stack
-func (s *ExecutionStack) Pop() (bool, []byte) {
-	size := len(s.Stack)
+func (vm *VM) Pop(alt bool) (bool, []byte) {
+	stack := &vm.Stack
+	if alt {
+		stack = &vm.AltStack
+	}
 
+	// Check we can remove an item
+	size := len(*stack)
 	if size == 0 {
 		return true, nil
 	}
 
-	value := (s.Stack)[size-1]
-	s.Stack = (s.Stack)[:size-1]
+	value := (*stack)[size-1]
+	*stack = (*stack)[:size-1]
+
 	return false, value
 }
 
 // NewScript creates an empty script
 func NewScript() *Script {
-	script := make([]byte, 0)
-	return &Script{script: script}
+	return &Script{data: make([]byte, 0)}
 }
 
-// NewExecutionStack creates an empty stack
-func NewExecutionStack(transactionEncoded []byte) *ExecutionStack {
-	stack := make([][]byte, 0)
-	return &ExecutionStack{Stack: stack, TransactionEncoded: transactionEncoded}
+// NewVM creates a new execution environment
+func NewVM(transactionEncoded []byte) *VM {
+	return &VM{
+		Stack: make([][]byte, 0),
+		AltStack: make([][]byte, 0),
+		Transaction: transactionEncoded,
+	}
 }
 
 // AppendOpCode for an opcode
 func (src *Script) AppendOpCode(op byte) {
-	src.script = append(src.script, op)
+	src.data = append(src.data, op)
 }
 
 // AppendData for arbitrary bytes
 func (src *Script) AppendData(b []byte) {
-	src.script = append(src.script, data.EncodeInt(len(b), 1)...)
-	src.script = append(src.script, b...)
+	src.data = append(src.data, data.EncodeInt(len(b), 1)...)
+	src.data = append(src.data, b...)
 }
 
 // Execute the script, returns bool depending whether the top element of the stack is truthy
 func (src *Script) Execute(transactionEncoded []byte) bool {
-	stack := NewExecutionStack(transactionEncoded)
-	scriptBytes := src.script
+	stack := NewVM(transactionEncoded)
+	scriptBytes := src.data
 	for {
 		if len(scriptBytes) == 0 {
 			break
@@ -86,11 +136,11 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 				return false
 			}
 		} else {
-			stack.Push(selected)
+			stack.Push(selected, false)
 		}
 	}
 
-	err, top := stack.Pop()
+	err, top := stack.Pop(false)
 	if err || len(top) == 0 || (len(top) == 1 && top[0] == 0x00) {
 		return false
 	}
@@ -99,18 +149,23 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 
 // Encode returns script as bytes
 func (src *Script) Encode() []byte {
-	return src.script
+	return src.data
+}
+
+// Concat appends one script on to the end of another
+func (src *Script) Concat(a *Script) {
+	src.data = append(src.data, a.data...)
 }
 
 // DecodeScript recovers script object for execution
 func DecodeScript(data []byte) *Script {
-	return &Script{script: data}
+	return &Script{data: data}
 }
 
 // Print displays script in readable format
 func (src *Script) Print() {
 	fmt.Println("BEGIN BLOKE SCRIPT")
-	scriptBytes := src.script
+	scriptBytes := src.data
 	line := 1
 	for {
 		if len(scriptBytes) == 0 {
@@ -155,9 +210,4 @@ func scanNext(scriptBytes []byte) (isOp bool, selected []byte, remainingBytes []
 	}
 	// Opcode
 	return true, []byte{first}, scriptBytes[1:]
-}
-
-// Concat appends one script on to the end of another
-func (src *Script) Concat(a *Script) {
-	src.script = append(src.script, a.script...)
 }

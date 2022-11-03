@@ -1,10 +1,9 @@
-package data
+package cryptography
 
 import (
 	"errors"
 	"bytes"
 	"math/big"
-	"crypto/sha256"
 )
 
 func fromPoint(p point) PublicKey {
@@ -13,20 +12,7 @@ func fromPoint(p point) PublicKey {
 
 // HashEncode generates unique hash of public key
 func (pk PublicKey) HashEncode() []byte {
-	return DoubleHash(pk.EncodeCompressed(), true)
-}
-
-// DoubleHash hashes twice using SHA-256
-func DoubleHash(b []byte, truncate bool) []byte {
-	// Return slice rather than fixed len array
-	hash := sha256.Sum256(b)
-	hash = sha256.Sum256(hash[:])
-
-	if truncate {
-		// Truncate to first 20 bytes because golang doesn't have RIPEMD160 in std lib
-		return hash[:20]
-	}
-	return hash[:]
+	return Hash160(pk.EncodeCompressed())
 }
 
 // ToAddress gives a compressed public key address
@@ -34,10 +20,9 @@ func (pk PublicKey) ToAddress() string {
 	pkHash := pk.HashEncode()
 	verPkHash := append([]byte("\x00"), pkHash...) // Main Net
 
-	checksumHash := DoubleHash(verPkHash, true)
-	checksum := checksumHash[:4]
+	checksumHash := Hash160(verPkHash)
 
-	bytesAddress := append(verPkHash, checksum...)
+	bytesAddress := append(verPkHash, checksumHash[:4]...)
 
 	return Base58Encode(bytesAddress)
 }
