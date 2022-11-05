@@ -161,10 +161,6 @@ func EncodeInt(i int, nbytes int) []byte {
 	buf := make([]byte, nbytes)
 	buf = big.NewInt(int64(i)).FillBytes(buf)
 
-	// if littleEndian {
-	// 	buf = reverseBytes(buf)
-	// }
-
 	return buf
 }
 

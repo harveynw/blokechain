@@ -11,7 +11,7 @@ type Script struct {
 	data []byte
 }
 
-var operations = map[byte]interface{}{
+var operations = map[byte]func(*VM)bool{
 	// FLOW CONTROL (Branching handled at execution)
 	0x61: OP_NOP,
 	0x69: OP_VERIFY,
@@ -53,46 +53,9 @@ var operations = map[byte]interface{}{
 	0x88: OP_EQUALVERIFY,
 }
 
-// Push value on top of stack
-func (vm *VM) Push(value []byte, alt bool) {
-	if alt {
-		vm.AltStack = append(vm.AltStack, value)
-	} else {
-		vm.Stack = append(vm.Stack, value)
-	}
-}
-
-// Pop value off top of stack
-func (vm *VM) Pop(alt bool) (bool, []byte) {
-	stack := &vm.Stack
-	if alt {
-		stack = &vm.AltStack
-	}
-
-	// Check we can remove an item
-	size := len(*stack)
-	if size == 0 {
-		return true, nil
-	}
-
-	value := (*stack)[size-1]
-	*stack = (*stack)[:size-1]
-
-	return false, value
-}
-
 // NewScript creates an empty script
 func NewScript() *Script {
 	return &Script{data: make([]byte, 0)}
-}
-
-// NewVM creates a new execution environment
-func NewVM(transactionEncoded []byte) *VM {
-	return &VM{
-		Stack:       make([][]byte, 0),
-		AltStack:    make([][]byte, 0),
-		Transaction: transactionEncoded,
-	}
 }
 
 // AppendOpCode for an opcode
@@ -102,7 +65,7 @@ func (src *Script) AppendOpCode(op byte) {
 
 // AppendData for arbitrary bytes
 func (src *Script) AppendData(b []byte) {
-	src.data = append(src.data, data.EncodeInt(len(b), 1)...)
+	src.data = append(src.data, byte(len(b)))
 	src.data = append(src.data, b...)
 }
 
