@@ -11,7 +11,28 @@ type Script struct {
 	data []byte
 }
 
-var operations = map[byte]func(*VM)bool{
+var operations = map[byte]func(*VM) bool{
+
+	// CONSTANTS
+	0x00: OP_0,
+	0x4f: OP_1NEGATE,
+	0x51: OP_TRUE,
+	0x52: OP_N(2),
+	0x53: OP_N(3),
+	0x54: OP_N(4),
+	0x55: OP_N(5),
+	0x56: OP_N(6),
+	0x57: OP_N(7),
+	0x58: OP_N(8),
+	0x59: OP_N(9),
+	0x5A: OP_N(10),
+	0x5B: OP_N(11),
+	0x5C: OP_N(12),
+	0x5D: OP_N(13),
+	0x5E: OP_N(14),
+	0x5F: OP_N(15),
+	0x60: OP_N(16),
+
 	// FLOW CONTROL (Branching handled at execution)
 	0x61: OP_NOP,
 	0x69: OP_VERIFY,
@@ -92,7 +113,7 @@ var operations = map[byte]func(*VM)bool{
 	0xac: OP_CHECKSIG,
 	0xad: OP_CHECKSIGVERIFY,
 	0xae: OP_CHECKMULTISIG, // TODO Not implemented!
-	0xaf: OP_CHECKMULTISIGVERIFY
+	0xaf: OP_CHECKMULTISIGVERIFY,
 }
 
 // NewScript creates an empty script
