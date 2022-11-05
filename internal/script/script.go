@@ -38,6 +38,50 @@ var operations = map[byte]func(*VM)bool{
 	0x71: OP_2ROT,
 	0x72: OP_2SWAP,
 
+	// SPLICE,
+	0x7e: OP_CAT,
+	0x7f: OP_SUBSTR,
+	0x80: OP_LEFT,
+	0x81: OP_RIGHT,
+	0x82: OP_SIZE,
+
+	// BITWISE LOGIC
+	0x83: OP_INVERT,
+	0x84: OP_AND,
+	0x85: OP_OR,
+	0x86: OP_XOR,
+	0x87: OP_EQUAL,
+	0x88: OP_EQUALVERIFY,
+
+	// ARITHMETIC
+	0x8b: OP_1ADD,
+	0x8c: OP_1SUB,
+	0x8d: OP_2MUL,
+	0x8e: OP_2DIV,
+	0x8f: OP_NEGATE,
+	0x90: OP_ABS,
+	0x91: OP_NOT,
+	0x92: OP_0NOTEQUAL,
+	0x93: OP_ADD,
+	0x94: OP_SUB,
+	0x95: OP_MUL,
+	0x96: OP_DIV,
+	0x97: OP_MOD,
+	0x98: OP_LSHIFT,
+	0x99: OP_RSHIFT,
+	0x9a: OP_BOOLAND,
+	0x9b: OP_BOOLOR,
+	0x9c: OP_NUMEQUAL,
+	0x9d: OP_NUMEQUALVERIFY,
+	0x9e: OP_NUMNOTEQUAL,
+	0x9f: OP_LESSTHAN,
+	0xa0: OP_GREATERTHAN,
+	0xa1: OP_LESSTHANOREQUAL,
+	0xa2: OP_GREATERTHANOREQUAL,
+	0xa3: OP_MIN,
+	0xa4: OP_MAX,
+	0xa5: OP_WITHIN,
+
 	// CRYPTO
 	0xa6: OP_RIPEMD160,
 	0xa7: OP_SHA1,
@@ -48,9 +92,7 @@ var operations = map[byte]func(*VM)bool{
 	0xac: OP_CHECKSIG,
 	0xad: OP_CHECKSIGVERIFY,
 	0xae: OP_CHECKMULTISIG, // TODO Not implemented!
-	0xaf: OP_CHECKMULTISIGVERIFY,
-
-	0x88: OP_EQUALVERIFY,
+	0xaf: OP_CHECKMULTISIGVERIFY
 }
 
 // NewScript creates an empty script
