@@ -107,13 +107,17 @@ func OP_CHECKMULTISIG(vm *VM) bool {
 	if err_dec_m {
 		return false
 	}
-	pks := make([][]byte, 0)
+	pks := make([]cryptography.PublicKey, 0)
 	for i := int64(0); i < m; i++ {
-		err_pk, pk := vm.Pop(false)
+		err_pk, pk_b := vm.Pop(false)
 		if err_pk {
 			return false
 		}
-		pks = append(pks, pk)
+		pubKey, pk_dec_err := cryptography.DecodePublicKeyCompressed(pk_b)
+		if pk_dec_err != nil {
+			return false
+		}
+		pks = append(pks, pubKey)
 	}
 
 	// Signatures
@@ -125,13 +129,17 @@ func OP_CHECKMULTISIG(vm *VM) bool {
 	if err_dec_n {
 		return false
 	}
-	sigs := make([][]byte, 0)
+	sigs := make([]cryptography.Signature, 0)
 	for i := int64(0); i < n; i++ {
-		err_sig, sig := vm.Pop(false)
+		err_sig, sig_b := vm.Pop(false)
 		if err_sig {
 			return false
 		}
-		sigs = append(sigs, sig)
+		signature, sig_dec_err := cryptography.DecodeSignature(sig_b)
+		if sig_dec_err != nil {
+			return false
+		}
+		sigs = append(sigs, signature)
 	}
 
 	// BIP 147 Requirement
@@ -141,15 +149,10 @@ func OP_CHECKMULTISIG(vm *VM) bool {
 	}
 
 	// Check signatures
-	for _, sig := range sigs {
+	for _, signature := range sigs {
 		pks_left := len(pks)
 		for idx := 0; idx < pks_left; idx++ {
-			signature, sig_dec_err := cryptography.DecodeSignature(sig)
-			pubKey, pk_dec_err := cryptography.DecodePublicKeyCompressed(pks[idx])
-			if pk_dec_err != nil || sig_dec_err != nil {
-				return false
-			}
-			if signature.VerifySignature(pubKey, vm.Transaction) {
+			if signature.VerifySignature(pks[idx], vm.Transaction) {
 				pks = append(pks[:idx], pks[idx+1:]...)
 				continue
 			}
