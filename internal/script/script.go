@@ -112,7 +112,7 @@ var operations = map[byte]func(*VM) bool{
 	0xab: OP_CODESEPERATOR,
 	0xac: OP_CHECKSIG,
 	0xad: OP_CHECKSIGVERIFY,
-	0xae: OP_CHECKMULTISIG, // TODO Not implemented!
+	0xae: OP_CHECKMULTISIG, // Needs testing
 	0xaf: OP_CHECKMULTISIGVERIFY,
 }
 
