@@ -1,11 +1,8 @@
-package ops
+package script
 
-import (
-	"github.com/harveynw/blokechain/internal/script"
-)
 
 // OP_TOALTSTACK 
-func OP_TOALTSTACK(vm *script.VM) bool {
+func OP_TOALTSTACK(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -15,7 +12,7 @@ func OP_TOALTSTACK(vm *script.VM) bool {
 	return true
 }
 
-func OP_FROMALTSTACK(vm *script.VM) bool {
+func OP_FROMALTSTACK(vm *VM) bool {
 	err, value := vm.Pop(true)
 	if err {
 		return false
@@ -25,13 +22,13 @@ func OP_FROMALTSTACK(vm *script.VM) bool {
 	return true
 }
 
-func OP_IFDUP(vm *script.VM) bool {
+func OP_IFDUP(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
 	}
 
-	if !script.IsZero(value) {
+	if !isZero(value) {
 		vm.Push(value, false)
 		vm.Push(value, false)
 	}
@@ -39,10 +36,10 @@ func OP_IFDUP(vm *script.VM) bool {
 	return true
 }
 
-func OP_DEPTH(vm *script.VM) bool {
+func OP_DEPTH(vm *VM) bool {
 	depth := len(vm.Stack)
 	
-	err, b := script.EncodeInt(int64(depth))
+	err, b := encodeInt(int64(depth))
 	if err {
 		return false
 	}
@@ -51,13 +48,13 @@ func OP_DEPTH(vm *script.VM) bool {
 	return true
 }
 
-func OP_DROP(vm *script.VM) bool {
+func OP_DROP(vm *VM) bool {
 	err, _ := vm.Pop(false)
 	return !err
 }
 
 // OP_DUP Duplicates top element of the stack
-func OP_DUP(vm *script.VM) bool {
+func OP_DUP(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -67,7 +64,7 @@ func OP_DUP(vm *script.VM) bool {
 	return true
 }
 
-func OP_NIP(vm *script.VM) bool {
+func OP_NIP(vm *VM) bool {
 	err1, val := vm.Pop(false)
 	err2, _ := vm.Pop(false)
 
@@ -79,7 +76,7 @@ func OP_NIP(vm *script.VM) bool {
 	return true
 }
 
-func OP_OVER(vm *script.VM) bool {
+func OP_OVER(vm *VM) bool {
 	err1, val1 := vm.Pop(false)
 	err2, val2 := vm.Pop(false)
 
@@ -93,12 +90,12 @@ func OP_OVER(vm *script.VM) bool {
 	return true
 }
 
-func OP_PICK(vm *script.VM) bool {
+func OP_PICK(vm *VM) bool {
 	err1, nb := vm.Pop(false)
 	if err1 {
 		return false
 	}
-	err2, n := script.DecodeInt(nb)
+	err2, n := decodeInt(nb)
 	if err2 {
 		return false
 	}
@@ -111,12 +108,12 @@ func OP_PICK(vm *script.VM) bool {
 	return true
 }
 
-func OP_ROLL(vm *script.VM) bool {
+func OP_ROLL(vm *VM) bool {
 	err1, nb := vm.Pop(false)
 	if err1 {
 		return false
 	}
-	err2, n := script.DecodeInt(nb)
+	err2, n := decodeInt(nb)
 	if err2 {
 		return false
 	}
@@ -132,7 +129,7 @@ func OP_ROLL(vm *script.VM) bool {
 	return true
 }
 
-func OP_ROT(vm *script.VM) bool {
+func OP_ROT(vm *VM) bool {
 	if len(vm.Stack) < 3 {
 		return false
 	}
@@ -141,7 +138,7 @@ func OP_ROT(vm *script.VM) bool {
 	return true
 }
 
-func OP_SWAP(vm *script.VM) bool {
+func OP_SWAP(vm *VM) bool {
 	if len(vm.Stack) < 2 {
 		return false
 	}
@@ -150,7 +147,7 @@ func OP_SWAP(vm *script.VM) bool {
 	return true
 }
 
-func OP_TUCK(vm *script.VM) bool {
+func OP_TUCK(vm *VM) bool {
 	if len(vm.Stack) < 2 {
 		return false
 	}
@@ -160,7 +157,7 @@ func OP_TUCK(vm *script.VM) bool {
 	return true
 }
 
-func OP_2DROP(vm *script.VM) bool {
+func OP_2DROP(vm *VM) bool {
 	if len(vm.Stack) < 2 {
 		return false
 	}
@@ -170,7 +167,7 @@ func OP_2DROP(vm *script.VM) bool {
 	return true
 }
 
-func OP_2DUP(vm *script.VM) bool {
+func OP_2DUP(vm *VM) bool {
 	if len(vm.Stack) < 2 {
 		return false
 	}
@@ -185,7 +182,7 @@ func OP_2DUP(vm *script.VM) bool {
 	return true
 }
 
-func OP_3DUP(vm *script.VM) bool {
+func OP_3DUP(vm *VM) bool {
 	if len(vm.Stack) < 3 {
 		return false
 	}
@@ -203,7 +200,7 @@ func OP_3DUP(vm *script.VM) bool {
 	return true
 }
 
-func OP_2OVER(vm *script.VM) bool {
+func OP_2OVER(vm *VM) bool {
 	if len(vm.Stack) < 4 {
 		return false
 	}
@@ -214,7 +211,7 @@ func OP_2OVER(vm *script.VM) bool {
 	return true
 }
 
-func OP_2ROT(vm *script.VM) bool {
+func OP_2ROT(vm *VM) bool {
 	if len(vm.Stack) < 6 {
 		return false
 	}
@@ -224,7 +221,7 @@ func OP_2ROT(vm *script.VM) bool {
 	return true
 }
 
-func OP_2SWAP(vm *script.VM) bool {
+func OP_2SWAP(vm *VM) bool {
 	if len(vm.Stack) < 4 {
 		return false
 	}

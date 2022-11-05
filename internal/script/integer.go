@@ -4,17 +4,17 @@ import (
 	"encoding/binary"
 )
 
-func IsTruthy(b []byte) bool {
+func isTruthy(b []byte) bool {
 	// Anything not zero
-	return !IsZero(b)
+	return !isZero(b)
 }
 
-func IsFalse(b []byte) bool {
+func isFalse(b []byte) bool {
 	// Equivalent to isZero
-	return IsZero(b)
+	return isZero(b)
 }
 
-func IsZero(b []byte) bool {
+func isZero(b []byte) bool {
 	// Positive zero
 	if len(b) == 0 {
 		return true
@@ -32,7 +32,7 @@ func IsZero(b []byte) bool {
 	return true
 }
 
-func DecodeInt(b []byte) (err bool, val int64) {
+func decodeInt(b []byte) (err bool, val int64) {
 	l := len(b)
 
 	// Arithmetic on more than 4 bytes input forbidden
@@ -63,7 +63,7 @@ func DecodeInt(b []byte) (err bool, val int64) {
 	return false, val
 }
 
-func EncodeInt(i int64) (err bool, b []byte) {
+func encodeInt(i int64) (err bool, b []byte) {
 	var isNeg bool = i < 0
 	if isNeg {
 		i *= -1

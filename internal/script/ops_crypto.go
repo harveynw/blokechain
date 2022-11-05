@@ -1,13 +1,12 @@
-package ops
+package script
 
 import (
 	"github.com/harveynw/blokechain/internal/cryptography"
-	"github.com/harveynw/blokechain/internal/script"
 )
 
 
 // OP_RIPEMD160 Hashes the input using RIPEMD160 
-func OP_RIPEMD160(vm *script.VM) bool {
+func OP_RIPEMD160(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -17,7 +16,7 @@ func OP_RIPEMD160(vm *script.VM) bool {
 }
 
 // OP_SHA1 Hashes the input using SHA1
-func OP_SHA1(vm *script.VM) bool {
+func OP_SHA1(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -27,7 +26,7 @@ func OP_SHA1(vm *script.VM) bool {
 }
 
 // OP_SHA256 Hashes the input using SHA256
-func OP_SHA256(vm *script.VM) bool {
+func OP_SHA256(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -37,7 +36,7 @@ func OP_SHA256(vm *script.VM) bool {
 }
 
 // OP_HASH160 Hashes the input using Hash160
-func OP_HASH160(vm *script.VM) bool {
+func OP_HASH160(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -47,7 +46,7 @@ func OP_HASH160(vm *script.VM) bool {
 }
 
 // OP_HASH256 Hashes the input using Hash256
-func OP_HASH256(vm *script.VM) bool {
+func OP_HASH256(vm *VM) bool {
 	err, value := vm.Pop(false)
 	if err {
 		return false
@@ -57,13 +56,13 @@ func OP_HASH256(vm *script.VM) bool {
 }
 
 // OP_CODESEPERATOR Does nothing
-func OP_CODESEPERATOR(vm *script.VM) bool {
+func OP_CODESEPERATOR(vm *VM) bool {
 	// TODO
 	return true
 }
 
 // OP_CHECKSIG Pushes true/false, depending on whether the pub key and signature are valid for the transaction
-func OP_CHECKSIG(vm *script.VM) bool {
+func OP_CHECKSIG(vm *VM) bool {
 	err1, pubKeyBytes := vm.Pop(false)
 	err2, sigBytes := vm.Pop(false)
 	if err1 || err2 {
@@ -88,7 +87,7 @@ func OP_CHECKSIG(vm *script.VM) bool {
 	return true
 }
 
-func OP_CHECKSIGVERIFY(vm *script.VM) bool {
+func OP_CHECKSIGVERIFY(vm *VM) bool {
 	err1 := OP_CHECKSIG(vm)
 	if err1 {
 		return false
@@ -98,12 +97,12 @@ func OP_CHECKSIGVERIFY(vm *script.VM) bool {
 	return !err2
 }
 
-func OP_CHECKMULTISIG(vm *script.VM) bool {
+func OP_CHECKMULTISIG(vm *VM) bool {
 	// TODO
 	return true
 }
 
-func OP_CHECKMULTISIGVERIFY(vm *script.VM) bool {
+func OP_CHECKMULTISIGVERIFY(vm *VM) bool {
 	err1 := OP_CHECKMULTISIG(vm)
 	if err1 {
 		return false

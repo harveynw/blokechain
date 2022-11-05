@@ -3,64 +3,54 @@ package script
 import (
 	"fmt"
 	"reflect"
-    "runtime"
-	"github.com/harveynw/blokechain/internal/script/ops"
+	"runtime"
 )
-
-// VM implements the bitcoin virtual machine
-type VM struct {
-	Stack [][]byte
-	AltStack [][]byte
-	Transaction []byte // Required for operations dependent on the transaction
-}
 
 // Script for containing and encoding a script
 type Script struct {
 	data []byte
 }
 
-var operations = map[byte]func(*VM)bool {
+var operations = map[byte]interface{}{
 	// FLOW CONTROL (Branching handled at execution)
-	0x61 : ops.OP_NOP,
-	0x69 : ops.OP_VERIFY,
-	0x6a : ops.OP_RETURN,
+	0x61: OP_NOP,
+	0x69: OP_VERIFY,
+	0x6a: OP_RETURN,
 
 	// STACK
-	0x6b : ops.OP_TOALTSTACK,
-	0x6c : ops.OP_FROMALTSTACK,
-	0x73 : ops.OP_IFDUP,
-	0x74 : ops.OP_DEPTH,
-	0x75 : ops.OP_DROP,
-	0x76 : ops.OP_DUP,
-	0x77 : ops.OP_NIP,
-	0x78 : ops.OP_OVER,
-	0x79 : ops.OP_PICK,
-	0x7a : ops.OP_ROLL,
-	0x7b : ops.OP_ROT,
-	0x7c : ops.OP_SWAP,
-	0x7d : ops.OP_TUCK,
-	0x6d : ops.OP_2DROP,
-	0x6e : ops.OP_2DUP,
-	0x6f : ops.OP_3DUP,
-	0x70 : ops.OP_2OVER,
-	0x71 : ops.OP_2ROT,
-	0x72 : ops.OP_2SWAP,
+	0x6b: OP_TOALTSTACK,
+	0x6c: OP_FROMALTSTACK,
+	0x73: OP_IFDUP,
+	0x74: OP_DEPTH,
+	0x75: OP_DROP,
+	0x76: OP_DUP,
+	0x77: OP_NIP,
+	0x78: OP_OVER,
+	0x79: OP_PICK,
+	0x7a: OP_ROLL,
+	0x7b: OP_ROT,
+	0x7c: OP_SWAP,
+	0x7d: OP_TUCK,
+	0x6d: OP_2DROP,
+	0x6e: OP_2DUP,
+	0x6f: OP_3DUP,
+	0x70: OP_2OVER,
+	0x71: OP_2ROT,
+	0x72: OP_2SWAP,
 
 	// CRYPTO
-	0xa6 : ops.OP_RIPEMD160,
-	0xa7 : ops.OP_SHA1,
-	0xa8 : ops.OP_SHA256,
-	0xa9 : ops.OP_HASH160,
-	0xaa : ops.OP_HASH256,
-	0xab : ops.OP_CODESEPERATOR,
-	0xac : ops.OP_CHECKSIG,
-	0xad : ops.OP_CHECKSIGVERIFY,
-	0xae : ops.OP_CHECKMULTISIG, // TODO Not implemented!
-	0xaf : ops.OP_CHECKMULTISIGVERIFY,
+	0xa6: OP_RIPEMD160,
+	0xa7: OP_SHA1,
+	0xa8: OP_SHA256,
+	0xa9: OP_HASH160,
+	0xaa: OP_HASH256,
+	0xab: OP_CODESEPERATOR,
+	0xac: OP_CHECKSIG,
+	0xad: OP_CHECKSIGVERIFY,
+	0xae: OP_CHECKMULTISIG, // TODO Not implemented!
+	0xaf: OP_CHECKMULTISIGVERIFY,
 
-
-	0x88 : ops.OP_EQUALVERIFY,
-
+	0x88: OP_EQUALVERIFY,
 }
 
 // Push value on top of stack
@@ -99,8 +89,8 @@ func NewScript() *Script {
 // NewVM creates a new execution environment
 func NewVM(transactionEncoded []byte) *VM {
 	return &VM{
-		Stack: make([][]byte, 0),
-		AltStack: make([][]byte, 0),
+		Stack:       make([][]byte, 0),
+		AltStack:    make([][]byte, 0),
 		Transaction: transactionEncoded,
 	}
 }
@@ -189,7 +179,7 @@ func retrieveOpName(op byte) string {
 	opFunc := operations[op]
 	fullName := runtime.FuncForPC(reflect.ValueOf(opFunc).Pointer()).Name()
 
-	for i := 0; i < len(fullName) - 2; i++ {
+	for i := 0; i < len(fullName)-2; i++ {
 		if fullName[i:i+3] == "OP_" {
 			return fullName[i:]
 		}
@@ -206,7 +196,7 @@ func scanNext(scriptBytes []byte) (isOp bool, selected []byte, remainingBytes []
 	first := scriptBytes[0]
 	if first < 0x4c && first > 0x00 {
 		// Data
-		return false, scriptBytes[1:int(first)+1], scriptBytes[int(first)+1:]
+		return false, scriptBytes[1 : int(first)+1], scriptBytes[int(first)+1:]
 	}
 	// Opcode
 	return true, []byte{first}, scriptBytes[1:]
