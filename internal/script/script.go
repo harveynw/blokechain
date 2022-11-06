@@ -12,7 +12,6 @@ type Script struct {
 }
 
 var operations = map[byte]func(*VM) bool{
-
 	// CONSTANTS
 	0x00: OP_0,
 	0x4f: OP_1NEGATE,
@@ -132,7 +131,7 @@ func (src *Script) AppendData(b []byte) {
 	src.data = append(src.data, b...)
 }
 
-// Execute the script, returns bool depending whether the top element of the stack is truthy
+// Execute the script, returns success/failure
 func (src *Script) Execute(transactionEncoded []byte) bool {
 	stack := NewVM(transactionEncoded)
 	scriptBytes := src.data
@@ -211,19 +210,4 @@ func retrieveOpName(op byte) string {
 		}
 	}
 	return ""
-}
-
-// Find and returns next opcode or data as well as the rest of scriptBytes
-func scanNext(scriptBytes []byte) (isOp bool, selected []byte, remainingBytes []byte) {
-	if len(scriptBytes) == 0 {
-		return false, nil, nil
-	}
-
-	first := scriptBytes[0]
-	if first < 0x4c && first > 0x00 {
-		// Data
-		return false, scriptBytes[1 : int(first)+1], scriptBytes[int(first)+1:]
-	}
-	// Opcode
-	return true, []byte{first}, scriptBytes[1:]
 }
