@@ -133,29 +133,43 @@ func (src *Script) AppendData(b []byte) {
 
 // Execute the script, returns success/failure
 func (src *Script) Execute(transactionEncoded []byte) bool {
-	stack := NewVM(transactionEncoded)
+	vm := NewVM(transactionEncoded)
 	scriptBytes := src.data
+
+	// Sequentially execute script
 	for {
 		if len(scriptBytes) == 0 {
 			break
 		}
 
+		var parserErr bool
 		var isOp bool
 		var selected []byte
-		isOp, selected, scriptBytes = scanNext(scriptBytes)
+		parserErr, isOp, selected, scriptBytes = parseNext(scriptBytes, vm)
+		if parserErr {
+			return false
+		}
 
 		if isOp {
-			success := operations[selected[0]](stack)
+			fmt.Printf("Stack %x Op:%x(%v) Script Bytes %x \n", vm.Stack, selected, retrieveOpName(selected[0]), scriptBytes)
+		} else {
+			fmt.Printf("Stack %x Push:%x Script Bytes %x \n", vm.Stack, selected, scriptBytes)
+		}
+
+		if isOp {
+			success := operations[selected[0]](vm)
 			if !success {
 				fmt.Println("Failed on", retrieveOpName(selected[0]))
 				return false
 			}
 		} else {
-			stack.Push(selected, false)
+			vm.Push(selected, false)
 		}
 	}
 
-	err, top := stack.Pop(false)
+	// Final result of script
+	err, top := vm.Pop(false)
+	fmt.Printf("%x \n", top)
 	if err || len(top) == 0 || (len(top) == 1 && top[0] == 0x00) {
 		return false
 	}
@@ -180,27 +194,57 @@ func DecodeScript(data []byte) *Script {
 // Print displays script in readable format
 func (src *Script) Print() {
 	fmt.Println("BEGIN BLOKE SCRIPT")
-	scriptBytes := src.data
+
+	scriptBytes := make([]byte, len(src.data))
+	copy(scriptBytes, src.data)
+
 	line := 1
 	for {
 		if len(scriptBytes) == 0 {
 			break
 		}
 
-		var isOp bool
-		var selected []byte
-		isOp, selected, scriptBytes = scanNext(scriptBytes)
-
-		if isOp {
-			fmt.Println(line, retrieveOpName(selected[0]))
+		if scriptBytes[0] == op_if {
+			fmt.Println(line, "OP_IF")
+			scriptBytes = scriptBytes[1:]
+		} else if scriptBytes[0] == op_else {
+			fmt.Println(line, "OP_ELSE")
+			scriptBytes = scriptBytes[1:]
+		} else if scriptBytes[0] == op_endif {
+			fmt.Println(line, "OP_ENDIF")
+			scriptBytes = scriptBytes[1:]
+		} else if scriptBytes[0] == op_notif {
+			fmt.Println(line, "OP_NOTIF")
+			scriptBytes = scriptBytes[1:]
 		} else {
-			fmt.Printf("%v %x \n", line, selected)
+			var isOp bool
+			var selected []byte
+			_, isOp, selected, scriptBytes = parseNext(scriptBytes, nil)
+			if isOp {
+				fmt.Println(line, retrieveOpName(selected[0]))
+			} else {
+				fmt.Printf("%v %x \n", line, selected)
+			}
 		}
+
 		line++
 	}
 }
 
 func retrieveOpName(op byte) string {
+	if op >= 0x52 && op <= 0x60 {
+		return "OP_" + fmt.Sprintf("%v", int(op-0x50))
+	}
+	if op == op_if {
+		return "OP_IF"
+	} else if op == op_else {
+		return "OP_ELSE"
+	} else if op == op_endif {
+		return "OP_ENDIF"
+	} else if op == op_notif {
+		return "OP_NOTIF"
+	}
+
 	opFunc := operations[op]
 	fullName := runtime.FuncForPC(reflect.ValueOf(opFunc).Pointer()).Name()
 

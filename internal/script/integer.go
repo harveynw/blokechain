@@ -20,8 +20,8 @@ func isZero(b []byte) bool {
 		return true
 	}
 
-	// Test for arbitrary length negative zero
-	if b[0] != 0x80 {
+	// Test for arbitrary length negative/positive zero
+	if !(b[0] == 0x80 || b[0] == 0x00) {
 		return false
 	}
 	for _, v := range b[1:] {
@@ -64,6 +64,10 @@ func decodeInt(b []byte) (err bool, val int64) {
 }
 
 func encodeInt(i int64) (err bool, b []byte) {
+	if i == 0 {
+		return false, []byte{0x00}
+	}
+
 	var isNeg bool = i < 0
 	if isNeg {
 		i *= -1
@@ -72,18 +76,15 @@ func encodeInt(i int64) (err bool, b []byte) {
 	// To little-endian byte slice
 	b = make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(i))
-	//fmt.Printf("enc -> initial encoding %v \n", b)
 
 	// Trim leading zero bytes
 	for i := 7; i >= 0; i-- {
 		if b[i] == 0x00 {
-			//fmt.Println("      -> trimmed one byte")
 			b = b[0:i]
 		} else {
 			break
 		}
 	}
-	//fmt.Printf("      Final representation %v \n", b)
 
 	if isNeg && len(b) > 0 {
 		if b[len(b)-1] >= 0x80 {
@@ -95,10 +96,9 @@ func encodeInt(i int64) (err bool, b []byte) {
 		}
 	}
 
+	// Script spec
 	if len(b) > 5 {
-		//fmt.Println("   len(b) > 5 so return fail")
 		return true, nil
 	}
-	//fmt.Println("   return success")
 	return false, b
 }

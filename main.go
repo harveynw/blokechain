@@ -2,10 +2,8 @@ package main
 
 import (
 	// "github.com/harveynw/blokechain/internal/miner"
-	// "github.com/harveynw/blokechain/internal/script"
+	"github.com/harveynw/blokechain/internal/script"
 	// "github.com/harveynw/blokechain/internal/wallet"
-	"fmt"
-	"encoding/binary"
 	// "github.com/harveynw/blokechain/internal/cryptography"
 )
 
@@ -29,10 +27,6 @@ func main() {
 	// stackref := &stack
 	// *stackref = (*stackref)[:len(*stackref)-1]
 	// fmt.Println(stack)
-	
-	a := binary.LittleEndian.Uint16([]byte{0x81})
-	// If you need int16:
-	fmt.Println(a)
-	fmt.Println(int16(a))
+	script.TestScript()
 }
 
