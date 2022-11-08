@@ -113,6 +113,24 @@ var operations = map[byte]func(*VM) bool{
 	0xad: OP_CHECKSIGVERIFY,
 	0xae: OP_CHECKMULTISIG, // Needs testing
 	0xaf: OP_CHECKMULTISIGVERIFY,
+
+	// LOCKTIME
+	0xb1: OP_CHECKLOCKTIMEVERIFY, // Needs implementing
+	0xb2: OP_CHECKSEQUENCEVERIFY, // Needs implementing
+
+	// RESERVED WORDS (OP_VERIF, OP_VERNOTIF will result in invalid script)
+	0x50: OP_RESERVED,
+	0x62: OP_VER,
+	0x89: OP_RESERVED1,
+	0x8a: OP_RESERVED2,
+	0xb0: OP_NOP,
+	0xb3: OP_NOP,
+	0xb4: OP_NOP,
+	0xb5: OP_NOP,
+	0xb6: OP_NOP,
+	0xb7: OP_NOP,
+	0xb8: OP_NOP,
+	0xb9: OP_NOP,
 }
 
 // NewScript creates an empty script
@@ -151,9 +169,9 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 		}
 
 		if isOp {
-			fmt.Printf("Stack %x Op:%x(%v) Script Bytes %x \n", vm.Stack, selected, retrieveOpName(selected[0]), scriptBytes)
+			fmt.Printf("Stack %x Op:%x(%v) Remaining Script Bytes: [%x] \n", vm.Stack, selected, retrieveOpName(selected[0]), scriptBytes)
 		} else {
-			fmt.Printf("Stack %x Push:%x Script Bytes %x \n", vm.Stack, selected, scriptBytes)
+			fmt.Printf("Stack %x Push:%x Script Bytes [%x] \n", vm.Stack, selected, scriptBytes)
 		}
 
 		if isOp {

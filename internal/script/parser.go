@@ -1,7 +1,5 @@
 package script
 
-import "fmt"
-
 var op_if byte = 0x63
 var op_notif byte = 0x64
 var op_else byte = 0x67
@@ -43,13 +41,10 @@ func parseStatement(scriptBytes []byte) (isOpCode bool, statement []byte, remain
 }
 
 func trimControlFlow(scriptBytes []byte, vm *VM) (err bool, trimmed []byte) {
-	fmt.Printf("Stack %x trimControlFlow called \n", vm.Stack)
 	beginsWithOp, op, scriptBytes := parseStatement(scriptBytes)
 	if !beginsWithOp || !(op[0] == op_if || op[0] == op_notif) || len(vm.Stack) == 0 {
-		fmt.Println("DEBUG trimControlFlow called but script doesn't begin with control flow")
 		return false, nil
 	}
-	fmt.Printf("trim --> Examining %s\n", retrieveOpName(op[0]))
 
 	// Scan forward to distinguish branches
 	if_depth, else_depth := 1, 0
@@ -59,11 +54,6 @@ func trimControlFlow(scriptBytes []byte, vm *VM) (err bool, trimmed []byte) {
 		var is_op bool
 		var data []byte
 		is_op, data, scriptBytes = parseStatement(scriptBytes)
-		if is_op {
-			fmt.Println("trim --> Examining", retrieveOpName(data[0]))
-		} else {
-			fmt.Println("trim --> Examining", data)
-		}
 
 		if is_op {
 			op_code := data[0]
@@ -99,42 +89,11 @@ func trimControlFlow(scriptBytes []byte, vm *VM) (err bool, trimmed []byte) {
 
 	// Return correct branch, as well as the remaining script
 	topElementTrue := isTruthy(vm.Stack[0])
-	fmt.Println("Top element is", topElementTrue)
 	if (op[0] == op_if && topElementTrue) || (op[0] == op_notif && !topElementTrue) {
 		// First branch
-		fmt.Printf("trim -> Return first branch %x \n", true_branch)
 		return false, append(true_branch, scriptBytes...)
 	} else {
 		// Second branch
-		fmt.Printf("trim -> Return second branch %x \n", false_branch)
 		return false, append(false_branch, scriptBytes...)
 	}
 }
-
-// if { 1 0
-// 	if { 2 0
-// 		if { 3 0
-
-// 		} else { 3 1
-
-// 		} 2 0
-// 	} 1 0
-// } else { 1 1
-// 	if { 2 1
-// 		if { 3 1
-
-// 		} else { 3 2
-
-// 		} 2 1
-// 	} else { 2 2
-
-// 	} 1 1 
-// } 0 0
-
-// if { 1 0
-// 	if { 2 0
-
-// 	} else { 2 1
-
-// 	} 1 0
-// } 0 0
