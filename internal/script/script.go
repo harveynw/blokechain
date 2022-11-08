@@ -177,7 +177,7 @@ func (src *Script) Execute(transactionEncoded []byte) bool {
 		if isOp {
 			success := operations[selected[0]](vm)
 			if !success {
-				fmt.Println("Failed on", retrieveOpName(selected[0]))
+				fmt.Printf("Failed on requested OP %x, is it disabled? \n", selected[0])
 				return false
 			}
 		} else {
