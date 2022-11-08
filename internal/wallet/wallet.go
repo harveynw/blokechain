@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
-	"github.com/harveynw/blokechain/internal/data"
+	"github.com/harveynw/blokechain/internal/cryptography"
 )
 
 // Wallet for holding multiple key pairs
@@ -16,7 +16,7 @@ type Wallet struct {
 
 // Address for a holding a ECDSA public key, private key pair
 type Address struct {
-	PublicKey data.PublicKey
+	PublicKey cryptography.PublicKey
 	SecretKey *big.Int
 }
 
@@ -55,7 +55,7 @@ func Load() *Wallet {
 }
 
 // Add adds a new keypair to the wallet and saves it
-func (wallet *Wallet) Add(pubKey data.PublicKey, secretKey *big.Int) {
+func (wallet *Wallet) Add(pubKey cryptography.PublicKey, secretKey *big.Int) {
 	addr := Address{PublicKey: pubKey, SecretKey: secretKey}
 	wallet.Addresses = append(wallet.Addresses, addr)
 	wallet.Save()
@@ -63,7 +63,7 @@ func (wallet *Wallet) Add(pubKey data.PublicKey, secretKey *big.Int) {
 
 // GenerateNew creates a new keypair and saves it
 func (wallet *Wallet) GenerateNew() string {
-	secretKey, pubKey := data.RandomKeyPair()
+	secretKey, pubKey := cryptography.RandomKeyPair()
 	wallet.Add(pubKey, secretKey)
 	return pubKey.ToAddress()
 }
@@ -94,6 +94,5 @@ func getWalletFolder() string {
 }
 
 func getWalletFile() string {
-	// return getWalletFolder() + "/wallet.json"
-	return getWalletFolder() + "/genesis_coinbase_wallet.json"
+	return getWalletFolder() + "/wallet.json"
 }

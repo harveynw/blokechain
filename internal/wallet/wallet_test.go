@@ -2,9 +2,13 @@ package wallet
 
 import (
 	"fmt"
+	"os"
+	"testing"
 )
 
-func Test() {
+func TestLoading(t *testing.T) {
+	os.Chdir("../..")
+
 	wallet := Load()
 	for i := 0; i < 5; i++ {
 		wallet.GenerateNew()

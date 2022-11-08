@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 	"github.com/harveynw/blokechain/internal/chain"
-	"github.com/harveynw/blokechain/internal/params"
 )
 
 // Mine performs a fixed number of iterations attempting to mine a block header
@@ -18,7 +17,7 @@ func Mine(bh chain.BlockHeader) (success bool, bhSolved chain.BlockHeader) {
 	// }
 
 
-	for i := 0; i < params.MiningIterationsPerCall; i++ {
+	for i := 0; i < MiningIterationsPerCall; i++ {
 		work := bh.BlockHash()
 
 		// if chain.Compare(work, lowest) == -1 {

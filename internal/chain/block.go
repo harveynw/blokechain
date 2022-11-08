@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"time"
-	"github.com/harveynw/blokechain/internal/data"
+	"github.com/harveynw/blokechain/internal/cryptography"
 )
 
 // Block data structure for forming blockchain
@@ -36,13 +36,13 @@ func (bh BlockHeader) Encode() []byte {
 	enc = append(enc, bh.merkleRoot[0:32]...)
 
 	// Timestamp (seconds from Unix Epoch, 4 Bytes)
-	enc = append(enc, data.EncodeInt(int(bh.timestamp), 4)...)
+	enc = append(enc, cryptography.EncodeInt(int(bh.timestamp), 4)...)
 
 	// Difficulty Target
 	enc = append(enc, bh.DifficultyTarget.Encode()...)
 
 	// Nonce
-	enc = append(enc, data.EncodeInt(int(bh.Nonce), 4)...)
+	enc = append(enc, cryptography.EncodeInt(int(bh.Nonce), 4)...)
 
 	return enc
 }
@@ -50,7 +50,7 @@ func (bh BlockHeader) Encode() []byte {
 // BlockHash hashes the block header
 func (bh BlockHeader) BlockHash() []byte {
 	enc := bh.Encode()
-	return data.DoubleHash(enc, false)
+	return cryptography.DoubleHash(enc, false)
 }
 
 // IncrementNonce increases the nonce field of the block to ensure it's hash changes

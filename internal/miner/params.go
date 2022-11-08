@@ -1,4 +1,4 @@
-package params
+package miner
 
 // DifficultyInterval sets the desired number of blocks between difficulty updates
 var DifficultyInterval int = 144
