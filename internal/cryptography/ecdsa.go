@@ -175,7 +175,7 @@ func (p point) isZero() bool {
 }
 
 func (gen generator) randomSecretKey() *big.Int {
-	// Generate cryptographically strong pseudo-random secret key between 1 <= n <= order
+	// Generate secret key between 1 <= n <= order
 	n, err := rand.Int(rand.Reader, &gen.order)
 	if err != nil {
 		fmt.Println(err)

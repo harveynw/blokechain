@@ -12,13 +12,6 @@ type Difficulty struct {
 	targetBytes []byte
 }
 
-func min(a, b int) int {
-    if a < b {
-        return a
-    }
-    return b
-}
-
 func leftPad(b []byte, l int) ([]byte, int) {
 	if len(b) >= l {
 		return b, 0
