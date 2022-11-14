@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"bytes"
+	"math/big"
 	"encoding/hex"
 )
 
@@ -51,4 +52,10 @@ func checkEncodeDecodeEquivalence(encoded []byte, t *testing.T) {
 	if !bytes.Equal(encoded, diff.Encode()) {
 		t.Fatalf("Failed equivalence of decode\n %s == %s", encoded, diff.Encode())
 	}
+}
+
+func TestKarpathy(t *testing.T) {
+	private_key := new(big.Int)
+    private_key, _ = private_key.SetString("29595381593786747354608258168471648998894101022644411052850960746671046944116", 10)
+	
 }
